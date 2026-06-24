@@ -8,7 +8,7 @@ let world;
 
 let backgroundImg;
 
-// OM NOM
+// Om Nom
 let omNomFrames = [];
 let currentFrame = 0;
 let frameDelay = 15;
@@ -26,6 +26,11 @@ let candyCon;
 let ground;
 
 let gameState = "playing";
+
+// Estrelas
+let stars = [];
+let score = 0;
+let starImg;
 
 function preload() {
     backgroundImg = loadImage("assets/bg-box.jpeg");
@@ -46,6 +51,7 @@ function preload() {
     omNomFrames.push(loadImage("assets/om-nom6.png"));
 
     pinImg = loadImage("assets/pino-parede.png");
+    starImg = loadImage("assets/star.png");
 }
 
 function setup() {
@@ -67,6 +73,8 @@ function draw() {
 
     imageMode(CORNER);
     image(backgroundImg, 0, 0, width, height);
+
+    drawStars();
 
     Engine.update(engine);
 
@@ -90,8 +98,10 @@ function draw() {
         image(candyImg, candy.position.x, candy.position.y, 60, 60);
     }
 
+    checkStars();
     checkWin();
     checkLose();
+    drawScore();
 
     drawGameState();
 
@@ -156,6 +166,13 @@ function checkLose() {
 }
 
 function drawGameState() {
+    if (gameState === "playing") return;
+
+    push();
+    
+    fill(0, 0, 0, 180);
+    rect(0, 0, width, height);
+
     textAlign(CENTER);
     textSize(40);
     fill(255);
@@ -167,6 +184,11 @@ function drawGameState() {
     if (gameState === "lose") {
         text("VOCÊ PERDEU!", width / 2, 250);
     }
+
+    textSize(20);
+    text("Pressione R para reiniciar", width / 2, 200);
+
+    pop();
 }
 
 function mouseDragged() {
@@ -188,4 +210,63 @@ function mouseDragged() {
             break;
         }
     }
+}
+
+function keyPressed(){
+    if(key === "r" || key === "R"){
+        restartLevel();
+    }
+}
+
+function restartLevel(){
+    if(candy){
+        World.remove(world, candy);
+        candy = null;
+    }
+
+    if(candyCon){
+        candyCon.detach();
+        candyCon = null;
+    }
+
+    if (rope && rope.body){
+        Composite.remove(world, rope.body);
+    }
+
+    if(ground && ground.body){
+        World.remove(world, ground.body);
+    }
+
+    loadLevel1();
+
+    gameState = "playing";
+}
+
+function drawStars(){
+    imageMode(CENTER);
+
+    for(let star of stars){
+        if(star.collected) continue;        
+        image(starImg, star.x, star.y, 80, 40);        
+    }
+}
+
+function checkStars(){
+    if(!candy) return;
+
+    for(let star of stars){
+        if(star.collected) continue;
+        let d = dist(candy.position.x, candy.position.y, star.x, star.y);
+        if (d < 40){
+            star.collected = true;
+            score++
+        }
+    }
+}
+
+function drawScore(){
+    fill(255);
+    textSize(24);
+    textAlign(LEFT);
+    text("⭐ " + score, 20, 40);
 }
